@@ -4,6 +4,7 @@
 	import { onMount } from 'svelte';
 	import UserProfile from '../../components/UserProfile.svelte';
 	import { root, user } from '../../stores';
+	import api from '../../api';
 
 	let success = '';
 	let error = '';
@@ -35,15 +36,18 @@
 				writeError('You must provide username or avatar');
 			} else {
 				try {
-					let result = await axios.put(`${root}/users`, formdata);
+					// @ts-ignore
+					let result = await api.updateMe(formdata);
 
-					success = result.data.message;
+					success = result.message;
 					error = '';
 					await goto('/');
 				} catch (e) {
 					success = '';
 
-					writeError(e.response.data.message);
+					//@ts-ignore
+					writeError(e.response.message);
+					console.log(e);
 					let usernameInput: HTMLInputElement = document.querySelector('#username')!;
 					usernameInput.value = '';
 				}
@@ -52,10 +56,9 @@
 	});
 
 	async function getMyCharacters() {
-		let allCharactersResult = await axios.get(`${root}/characters`);
+		let characters = await api.getCharacters();
 
-		let mycharacters = allCharactersResult.data.filter((chara: any) => chara.ownerId === $user._id);
-		return mycharacters;
+		return characters.filter((chara) => chara.ownerId === $user._id);
 	}
 </script>
 

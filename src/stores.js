@@ -2,10 +2,9 @@ import axios from 'axios';
 axios.defaults.withCredentials = true;
 import { writable } from 'svelte/store';
 import { io } from 'socket.io-client';
-import { onMount } from 'svelte';
 
 /**
- * @type {import('svelte/store').Writable<import('./types').User>}
+ * @type {import('svelte/store').Writable<import("./api").API.ClientUser>}
  */
 export const user = writable();
 

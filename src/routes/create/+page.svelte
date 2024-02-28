@@ -5,6 +5,8 @@
 	import StatsEditor from '../../components/StatsEditor.svelte';
 	import TagInput from '../../components/TagInput.svelte';
 	import MarkdownEditor from '../../components/MarkdownEditor.svelte';
+	import api from '../../api';
+
 	let success = '';
 	let error = '';
 	let statsData: { name: string; value: number }[];
@@ -34,13 +36,14 @@
 	let imagesForm: HTMLFormElement;
 
 	function letsCreate(ev: Event) {
-		axios
-			.post(`${root}/characters`, { ...character, stats: statsData, tags: tagsData })
+		api
+			.addCharacter({ ...character, stats: statsData, tags: tagsData })
 			.then(async (result) => {
-				await goto(`/${result.data.code}`);
+				if (result.code) return await goto(`/${result.code}`);
+				writeError(result.message);
 			})
 			.catch((e) => {
-				writeError(e.response.data.message);
+				console.log(e);
 			});
 	}
 
@@ -51,6 +54,7 @@
 			reader.onload = () => resolve(reader.result);
 			reader.onerror = (e) => reject(e);
 		});
+
 	function openImage(ev: Event) {
 		//@ts-ignore
 		let parent: HTMLDivElement = ev.target!.parentNode!;
@@ -65,18 +69,15 @@
 
 			let formData = new FormData();
 			formData.set('image', file);
-			try {
-				let resultUpload = await axios.post(`${root}/upload`, formData);
 
-				if (resultUpload.data.url) {
-					if (input.id.includes('icon')) {
-						character.icon = resultUpload.data.url;
-					} else if (input.id.includes('refsheet')) {
-						character.refsheet = resultUpload.data.url;
-					}
+			let url = await api.upload(formData);
+
+			if (url) {
+				if (input.id.includes('icon')) {
+					character.icon = url;
+				} else if (input.id.includes('refsheet')) {
+					character.refsheet = url;
 				}
-			} catch (e) {
-				console.log(e);
 			}
 		});
 	}

@@ -5,6 +5,7 @@
 	import StatsEditor from '../../../components/StatsEditor.svelte';
 	import TagInput from '../../../components/TagInput.svelte';
 	import MarkdownEditor from '../../../components/MarkdownEditor.svelte';
+	import api, { type API } from '../../../api';
 
 	export let data;
 	let success = '';
@@ -26,12 +27,11 @@
 		}, 3000);
 	}
 
-	let character: any = {};
+	let character: API.Character | null = null;
 
 	(async () => {
 		try {
-			let result = await axios.get(`${root}/characters/${data.id}`);
-			character = result.data;
+			character = await api.getCharacter(data.id);
 		} catch {
 			await goto('/discover');
 		}
@@ -44,18 +44,15 @@
 	let imagesForm: HTMLFormElement;
 
 	function letsEdit(ev: Event) {
-		axios
-			.put(`${root}/characters`, {
-				_id: character._id,
-				...character,
-				tags: tagsData,
-				stats: statsData
-			})
-			.then(async (result) => {
-				await goto(`/${character.code}`);
+		if (!character) return;
+
+		api
+			.updateCharacter({ ...character, tags: tagsData, stats: statsData })
+			.then(async (res) => {
+				await goto(`/${character!.code}`);
 			})
 			.catch((e) => {
-				writeError(e.response.data.message);
+				console.log(e);
 			});
 	}
 
@@ -82,13 +79,13 @@
 			let formData = new FormData();
 			formData.set('image', file);
 			try {
-				let resultUpload = await axios.post(`${root}/upload`, formData);
+				let url = await api.upload(formData);
 
-				if (resultUpload.data.url) {
+				if (url) {
 					if (input.id.includes('icon')) {
-						character.icon = resultUpload.data.url;
+						character!.icon = url;
 					} else if (input.id.includes('refsheet')) {
-						character.refsheet = resultUpload.data.url;
+						character!.refsheet = url;
 					}
 				}
 			} catch (e) {
@@ -99,90 +96,92 @@
 </script>
 
 <svelte:head>
-	<title>Editing {character.name || 'a character'}</title>
+	<title>Editing {character ? character.name || 'a character' : 'a character'}</title>
 </svelte:head>
 
 <main>
 	<div class="container">
-		{#if success}
-			<div class="success alert"><p>{success}</p></div>
-		{/if}
+		{#if character}
+			{#if success}
+				<div class="success alert"><p>{success}</p></div>
+			{/if}
 
-		{#if error}
-			<div class="error alert"><p>{error}</p></div>
-		{/if}
+			{#if error}
+				<div class="error alert"><p>{error}</p></div>
+			{/if}
 
-		<div class="box">
-			<div class="inline-name">
-				<h1>Character :</h1>
-				<input
-					type="text"
-					name="name"
-					id="name"
-					on:input={inputNameChange}
-					placeholder="Give a name to the character"
-					autocomplete="off"
-					value={character.name}
-				/>
+			<div class="box">
+				<div class="inline-name">
+					<h1>Character :</h1>
+					<input
+						type="text"
+						name="name"
+						id="name"
+						on:input={inputNameChange}
+						placeholder="Give a name to the character"
+						autocomplete="off"
+						value={character.name}
+					/>
 
-				<button on:click={letsEdit}>Edit</button>
-			</div>
-
-			<MarkdownEditor bind:markdown={character.description}></MarkdownEditor>
-			<div id="editorjs"></div>
-
-			<div class="images-corner">
-				<form action="" class="images-form" method="put" id="images-form" bind:this={imagesForm}>
-					<div class="setting-icon">
-						<label for="icon">Icon</label>
-						<br />
-						<input type="file" name="icon" id="icon" max="1" hidden />
-
-						{#if character.icon}
-							<img src={character.icon} on:click={openImage} alt="" />
-						{:else}
-							<button on:click={openImage}>Upload Icon</button>
-						{/if}
-					</div>
-
-					<div class="setting-refsheet">
-						<label for="refsheet">Refsheet</label>
-						<br />
-						<input type="file" name="refsheet" id="refsheet" max="1" hidden />
-
-						{#if character.refsheet}
-							<img src={character.refsheet} on:click={openImage} alt="" />
-						{:else}
-							<button on:click={openImage}>Upload Refsheet</button>
-						{/if}
-					</div>
-				</form>
-			</div>
-		</div>
-
-		<div class="box">
-			<div class="inline">
-				<div class="stats-box">
-					<h3>Stats</h3>
-					{#if character && character.stats}
-						<StatsEditor bind:data={statsData} dataToSet={character.stats}></StatsEditor>
-					{/if}
+					<button on:click={letsEdit}>Edit</button>
 				</div>
-				<div class="tag-box">
-					<h3>Tags</h3>
 
-					{#if character && character.tags}
-						<TagInput
-							placeholder="Add keywords"
-							tagsToSet={character.tags}
-							bind:keywordsList={tagsData}
-						></TagInput>
-					{:else}
-						<TagInput placeholder="Add keywords" bind:keywordsList={tagsData}></TagInput>
-					{/if}
+				<MarkdownEditor bind:markdown={character.description}></MarkdownEditor>
+				<div id="editorjs"></div>
+
+				<div class="images-corner">
+					<form action="" class="images-form" method="put" id="images-form" bind:this={imagesForm}>
+						<div class="setting-icon">
+							<label for="icon">Icon</label>
+							<br />
+							<input type="file" name="icon" id="icon" max="1" hidden />
+
+							{#if character.icon}
+								<img src={character.icon} on:click={openImage} alt="" />
+							{:else}
+								<button on:click={openImage}>Upload Icon</button>
+							{/if}
+						</div>
+
+						<div class="setting-refsheet">
+							<label for="refsheet">Refsheet</label>
+							<br />
+							<input type="file" name="refsheet" id="refsheet" max="1" hidden />
+
+							{#if character.refsheet}
+								<img src={character.refsheet} on:click={openImage} alt="" />
+							{:else}
+								<button on:click={openImage}>Upload Refsheet</button>
+							{/if}
+						</div>
+					</form>
 				</div>
 			</div>
-		</div>
+
+			<div class="box">
+				<div class="inline">
+					<div class="stats-box">
+						<h3>Stats</h3>
+						{#if character && character.stats}
+							<StatsEditor bind:data={statsData} dataToSet={character.stats}></StatsEditor>
+						{/if}
+					</div>
+					<div class="tag-box">
+						<h3>Tags</h3>
+
+						{#if character && character.tags}
+							<TagInput
+								placeholder="Add keywords"
+								tagsToSet={character.tags}
+								bind:keywordsList={tagsData}
+							></TagInput>
+						{:else}
+							<TagInput placeholder="Add keywords" bind:keywordsList={tagsData}></TagInput>
+						{/if}
+					</div>
+				</div>
+			</div>
+		{/if}
 	</div>
 </main>
 

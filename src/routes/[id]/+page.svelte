@@ -1,32 +1,30 @@
 <script lang="ts">
 	import axios from 'axios';
-	import type { Character, User } from '../../types.js';
 	import { Linkify, root, user } from '../../stores.js';
 	import { Chart, registerables } from 'chart.js';
 	import PartialUser from '../../components/PartialUser.svelte';
 	import { marked } from 'marked';
 	import DOMPurify from 'isomorphic-dompurify';
+	import { goto } from '$app/navigation';
+	import api, { type API } from '../../api.js';
 
 	Chart.register(...registerables);
 
 	export let data;
 
-	let chara: Character | null = null;
-	let owner: User;
+	let chara: API.Character | null = null;
+	let owner: API.User;
 	let msg = '';
 	let statsCanva: HTMLCanvasElement;
 
 	(async () => {
 		try {
-			let result = await axios.get(`${root}/characters/${data.id}`);
-			chara = result.data;
+			chara = await api.getCharacter(data.id);
+			owner = await api.getUser(chara.ownerId);
 
-			let res = await axios.get(`${root}/users/${chara?.ownerId}`);
-			owner = res.data;
-
-			if (chara?.stats && chara.stats.length === 1) {
-				if (chara.stats[0].name === '') chara.stats = undefined;
-			}
+			if (chara?.stats && chara.stats.length === 1 && chara.stats[0].name === '')
+				//@ts-ignore
+				chara.stats = undefined;
 		} catch (e) {
 			console.log(e);
 		}
@@ -68,20 +66,18 @@
 		}
 	}
 
-	function letsEdit(ev: Event) {
-		window.location.href = `/${chara?.code}/edit`;
+	async function letsEdit(ev: Event) {
+		await goto(`/${chara?.code}/edit`);
 	}
 
-	function letsDelete(ev: Event) {
+	async function letsDelete(ev: Event) {
 		let doDelete = confirm(`Are you sure to delete you character ${chara?.name}?`);
 
 		if (!doDelete) return;
 
 		try {
-			axios.delete(`${root}/characters/${chara?._id}`).then((response) => {
-				alert(JSON.stringify(response.data));
-				window.location.href = '/discover';
-			});
+			await api.deleteCharacter(chara!._id);
+			await goto('/discover');
 		} catch {}
 	}
 </script>

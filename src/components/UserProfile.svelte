@@ -1,18 +1,9 @@
 <script lang="ts">
-	import axios from 'axios';
 	import dayjs from 'dayjs';
 	import PartialUser from './PartialUser.svelte';
-	import type { User } from '../types';
-	import { root } from '../stores';
+	import type { API } from '../api';
 
-	export let user: User;
-
-	(async () => {
-		try {
-			let result = await axios.get(`${root}/users/@${user.username}`);
-			user = result.data;
-		} catch (e) {}
-	})();
+	export let user: API.User;
 </script>
 
 <div>

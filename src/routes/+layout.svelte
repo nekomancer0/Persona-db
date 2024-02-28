@@ -3,7 +3,7 @@
 	import { socket, user } from '../stores';
 	import Tooltip from '../components/Tooltip.svelte';
 	import Chatbox from '../components/Chatbox.svelte';
-	import type { User } from '../types';
+	import type { API } from '../api';
 
 	onMount(async () => {
 		let buttons = document.querySelectorAll('button');
@@ -50,7 +50,7 @@
 
 		if (!getCookie('token')) return;
 
-		socket.emit('login', getCookie('token'), (u: User) => {
+		socket.emit('login', getCookie('token'), (u: API.ClientUser) => {
 			user.set(u);
 		});
 	});

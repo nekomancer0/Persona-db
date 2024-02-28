@@ -1,18 +1,14 @@
 <script lang="ts">
-	import axios from 'axios';
-	import { root } from '../stores';
-	import PartialUser from './PartialUser.svelte';
 	import PartialCharacter from './PartialCharacter.svelte';
+	import api from '../api';
 
 	async function getRecentCharacters() {
-		let characters: any[] = [];
-		let result = await axios.get(`${root}/characters`);
-		let charas = result.data;
-
-		for (let chara of charas) {
-			let ownerResult = await axios.get(`${root}/users/${chara.ownerId}`);
-			characters.push({ ...chara, user: ownerResult.data });
-		}
+		let characters = await Promise.all(
+			(await api.getCharacters()).map(async (c) => ({
+				...c,
+				user: await api.getUser(c.ownerId)
+			}))
+		);
 
 		return characters
 			.sort((a, b) => a.editedAt - b.editedAt)

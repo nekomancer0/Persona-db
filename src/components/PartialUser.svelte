@@ -1,15 +1,16 @@
 <script lang="ts">
-	import axios from 'axios';
-	import type { User } from '../types';
-	import { root } from '../stores';
+	import { goto } from '$app/navigation';
+	import type { API } from '../api';
 
-	export let user: User;
+	export let user: API.User;
 
-	function openPage() {
-		window.location.href = `/profile/@${user.username}`;
+	async function openPage() {
+		await goto(`/profile/@${user.username}`);
 	}
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 {#if user}
 	<div class="inline" on:click={openPage}>
 		<img src={user.avatar} alt="" class="avatar" />

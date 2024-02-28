@@ -1,13 +1,11 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
 	import RecentCharacters from '../../components/RecentCharacters.svelte';
 	import { root, socket, user } from '../../stores';
-	import type { User } from '../../types';
 	import UserProfile from '../../components/UserProfile.svelte';
 	import axios from 'axios';
+	import type { API } from '../../api';
 
-	let users: User[] | null = null;
+	let users: API.User[] | null = null;
 
 	let ok = false;
 
@@ -15,7 +13,7 @@
 		if (new Object(user).hasOwnProperty('admin') && user.admin) {
 			socket.emit('dashbord');
 
-			socket.emit('get_users', (usersx: User[]) => {
+			socket.emit('get_users', (usersx: API.User[]) => {
 				users = usersx.sort((a, b) => a.createdAt - b.createdAt).reverse();
 			});
 
@@ -24,7 +22,7 @@
 		}
 	});
 
-	function delUser(user: User) {
+	function delUser(user: API.User) {
 		let confirmed = confirm(`Are you sure to delete completely ${user.username} ?`);
 
 		if (confirmed) {

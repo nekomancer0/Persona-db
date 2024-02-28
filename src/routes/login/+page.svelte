@@ -2,6 +2,8 @@
 	import { onMount } from 'svelte';
 	import axios from 'axios';
 	import { root } from '../../stores';
+	import api from '../../api';
+	import { goto } from '$app/navigation';
 
 	axios.defaults.withCredentials = true;
 
@@ -32,20 +34,17 @@
 			let passwordInput: HTMLInputElement = loginForm.querySelector('#password')!;
 
 			try {
-				let result = await axios.post(
-					`${root}/users/login`,
-					{
-						username: usernameInput.value,
-						password: passwordInput.value
-					},
-					{ withCredentials: true }
-				);
+				let result = await api.login({
+					username: usernameInput.value,
+					password: passwordInput.value
+				});
 
-				writeSuccess(result.data.message);
-
-				window.location.href = '/';
+				if (typeof result === 'string') {
+					await goto(`/profile/@${usernameInput.value}`);
+				} else {
+					writeError(result.message);
+				}
 			} catch (e) {
-				writeError(e.response.data.message);
 				console.log(e);
 			}
 		});
@@ -64,21 +63,18 @@
 				return writeError("Passwords don't match");
 
 			try {
-				let result = await axios.post(
-					`${root}/users`,
-					{
-						username: usernameInput.value,
-						email: emailInput.value,
-						password: passwordInput.value
-					},
-					{ withCredentials: true }
-				);
+				let result = await api.register({
+					username: usernameInput.value,
+					email: emailInput.value,
+					password: passwordInput.value
+				});
 
-				writeSuccess(result.data.message);
-
-				window.location.href = '/';
+				if (typeof result === 'string') {
+					await goto(`/profile/@${usernameInput.value}`);
+				} else {
+					writeError(result.message);
+				}
 			} catch (e) {
-				writeError(e.response.data.message);
 				console.log(e);
 			}
 		});

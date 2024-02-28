@@ -2,32 +2,22 @@
 	import axios from 'axios';
 	import UserProfile from '../../../components/UserProfile.svelte';
 	import { root } from '../../../stores';
-	import type { User } from '../../../types';
+	import type { API } from '../../../api';
+	import api from '../../../api';
 
 	export let data;
 
-	let user: User | null;
-
-	let notFound = false;
-
-	async function getByUsername() {
-		try {
-			let result = await axios.get(`${root}/users/${data.id}`);
-			user = result.data;
-		} catch (e) {
-			notFound = false;
-		}
-	}
+	let user: API.User | null;
 
 	(async () => {
-		await getByUsername();
+		try {
+			user = await api.getUser(data.id);
+		} catch (e) {}
 	})();
 
 	async function getMyCharacters() {
-		let allCharactersResult = await axios.get(`${root}/characters`);
-
-		let mycharacters = allCharactersResult.data.filter((chara: any) => chara.ownerId === user!._id);
-		return mycharacters;
+		let characters = await api.getCharacters();
+		return characters.filter((chara) => chara.ownerId === user!._id);
 	}
 </script>
 
@@ -53,7 +43,7 @@
 	<div class="container">
 		<h1>User : {data.id}</h1>
 		<br />
-		{#if user && !notFound}
+		{#if user}
 			<UserProfile {user}></UserProfile>
 
 			<div class="my-characters-box">

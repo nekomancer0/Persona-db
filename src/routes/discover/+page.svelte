@@ -1,20 +1,12 @@
 <script lang="ts">
-	import axios from 'axios';
-	import type { Character, User } from '../../types';
-	import { root } from '../../stores';
 	import PartialUser from '../../components/PartialUser.svelte';
+	import api, { type API } from '../../api';
 
-	let characters: Character[] | null = null;
+	let characters: API.Character[] | null = null;
 
 	(async () => {
-		let result = await axios.get(`${root}/characters`);
-		characters = result.data;
+		characters = await api.getCharacters();
 	})();
-
-	async function getUserOwner(id: string): Promise<User> {
-		let result = await axios.get(`${root}/users/${id}`);
-		return result.data;
-	}
 </script>
 
 <svelte:head>
@@ -44,8 +36,8 @@
 						</div>
 
 						<div class="owner">
-							{#await getUserOwner(character.ownerId) then owner}
-								<PartialUser user={owner}></PartialUser>
+							{#await api.getUser(character.ownerId) then user}
+								<PartialUser {user}></PartialUser>
 							{/await}
 						</div>
 					</div>

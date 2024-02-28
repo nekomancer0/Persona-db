@@ -1,9 +1,9 @@
 <script lang="ts">
-	import type { Character, User } from '../types';
+	import type { API } from '../api';
 	import PartialUser from './PartialUser.svelte';
 
-	export let character: Character;
-	export let owner: User;
+	export let character: API.Character;
+	export let owner: API.User;
 </script>
 
 <div class="character">

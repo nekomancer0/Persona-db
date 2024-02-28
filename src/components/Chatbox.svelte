@@ -1,23 +1,26 @@
 <script lang="ts">
 	import axios from 'axios';
-	import type { User } from '../types';
+	import type { API } from '../api';
 	import PartialUser from './PartialUser.svelte';
 	import { root, user } from '../stores';
 	import { onMount } from 'svelte';
 	import DOMPurify from 'dompurify';
 
 	export let socket: any;
-	let targetUser: User | null = null;
+	let targetUser: API.User | null = null;
 	let chatboxdiv: HTMLDivElement;
 	let searchuserInput: HTMLInputElement;
 	let opened = false;
 	let messageInput: HTMLInputElement;
 	let messagesDiv: HTMLDivElement;
 	let unreadMessages = 0;
+
 	function onSearch(ev: Event) {
+		//@ts-ignore
 		if (ev.target.value === '') targetUser = null;
 
 		axios
+			//@ts-ignore
 			.get(`${root}/users/@${ev.target.value}`)
 			.then((response) => {
 				targetUser = response.data;
@@ -87,7 +90,7 @@
 		return res;
 	}
 
-	async function addMessage(user: User, content: string, isDM?: boolean) {
+	async function addMessage(user: API.User, content: string, isDM?: boolean) {
 		if (messagesDiv && messageInput) {
 			let msgEl = document.createElement('p');
 			content = await replaceMentions(content);

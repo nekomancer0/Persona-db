@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-
 	export let placeholder: string;
 	export let max: number | undefined = 5;
 	export let keywordsList: string[] = [];
@@ -33,6 +31,7 @@
 
 			for (let el of domEls) {
 				el.onclick = (ev: MouseEvent) => {
+					//@ts-ignore
 					let parent = ev.target!.parentNode;
 					let span = parent.querySelector('span');
 					keywordsList = keywordsList.filter((k) => k !== span.textContent);

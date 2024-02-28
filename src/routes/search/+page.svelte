@@ -3,54 +3,49 @@
 	import { onMount } from 'svelte';
 	import { root } from '../../stores';
 	import PartialUser from '../../components/PartialUser.svelte';
+	import api, { type API } from '../../api';
+	import { goto } from '$app/navigation';
 
 	let query = '';
 
 	async function getUsersResult() {
-		let usersResult: any[] = [];
-		let res = await axios.get(`${root}/users`);
-		for (let d of res.data) {
-			if (d.username.includes(query)) {
-				usersResult.push(d);
-			}
-		}
-
-		return usersResult;
+		let users = (await api.getUsers()).filter((u) => u.username.includes(query));
+		return users;
 	}
 
 	async function getCharactersResult() {
-		let charactersResult: any[] = [];
-		let res2 = await axios.get(`${root}/characters`);
-		for (let d of res2.data) {
-			if (d.name.includes(query)) {
-				charactersResult.push(d);
-			} else {
+		let characters = await api.getCharacters();
+		let results: API.Character[] = [];
+
+		for (let character of characters) {
+			if (character.name.includes(query)) results.push(character);
+			else {
 				let found = false;
 				let keywords = query.split(' ');
 
 				for (let keyword of keywords) {
-					if (d.tags.includes(keyword)) {
+					if (character.tags.includes(keyword)) {
 						found = true;
 					}
 				}
 
-				if (found) charactersResult.push(d);
+				if (found) results.push(character);
 			}
 		}
 
-		return charactersResult;
+		return results;
 	}
 
 	onMount(async () => {
 		const params = new Proxy(new URLSearchParams(window.location.search), {
+			//@ts-ignore
 			get: (searchParams, prop) => searchParams.get(prop)
 		});
 
-		if (!params['q']) {
-			window.location.href = '/';
-			return;
-		}
+		//@ts-ignore
+		if (!params['q']) return await goto('/');
 
+		//@ts-ignore
 		query = decodeURIComponent(params['q']);
 	});
 </script>
