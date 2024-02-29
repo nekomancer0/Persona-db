@@ -35,12 +35,31 @@ function APIHandler(app: e.Express, server: Server) {
 	});
 
 	route.use(function (req, res, next) {
-		res.header('Access-Control-Allow-Origin', req.headers.origin || req.headers['host']);
+		res.header('Access-Control-Allow-Origin', req.headers.origin || req.headers.host);
 		res.header('Access-Control-Allow-Credentials', 'true');
-		res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-		res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+		res.header(
+			'Access-Control-Allow-Headers',
+			'Origin, X-Requested-With, Content-Type, Accept, Authorization, Content-Length'
+		);
+		res.header('Access-Control-Allow-Methods', 'GET, HEAD, PUT, PATCH, POST, DELETE, OPTIONS');
 
 		next();
+	});
+
+	route.use((req, res, next) => {
+		let domain = req.headers.origin ? new URL(req.headers.origin).hostname : req.headers.host;
+		let local = domain === 'localhost';
+
+		cookieSession({
+			secret: randomUUID(),
+			httpOnly: false,
+			secure: local ? false : true,
+			// sameSite: 'strict',
+			sameSite: local ? 'lax' : 'strict',
+			path: '/',
+			domain,
+			maxAge: Date.now() + 2592000000
+		})(req, res, next);
 	});
 
 	route.use('/files', e.static(path.join(__dirname, 'files')));
@@ -49,16 +68,6 @@ function APIHandler(app: e.Express, server: Server) {
 	route.use(e.urlencoded());
 
 	route.use(cookieParser());
-	route.use(
-		cookieSession({
-			secret: randomUUID(),
-			httpOnly: false,
-			sameSite: 'strict',
-			path: '/',
-			domain: 'persona-db.xyz',
-			maxAge: Date.now() + 2592000000
-		})
-	);
 
 	route.use(logger);
 

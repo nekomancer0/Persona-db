@@ -2,11 +2,10 @@
 	import axios from 'axios';
 	import type { API } from '../api';
 	import PartialUser from './PartialUser.svelte';
-	import { root, user } from '../stores';
+	import { root, socket, user } from '../stores';
 	import { onMount } from 'svelte';
 	import DOMPurify from 'dompurify';
 
-	export let socket: any;
 	let targetUser: API.User | null = null;
 	let chatboxdiv: HTMLDivElement;
 	let searchuserInput: HTMLInputElement;
@@ -51,19 +50,19 @@
 	onMount(() => {
 		messagesDiv.innerHTML = '';
 
-		socket.on('retrieve_messages', async (datas: any) => {
-			if (messagesDiv && messageInput) {
-				if (messagesDiv.innerHTML === '') {
-					for (let message of datas) {
-						let result = await axios.get(`${root}/users/${message.userId}`);
-						await addMessage(result.data, message.content);
-					}
-				} else {
-					let message = datas.at(-1);
-					let result = await axios.get(`${root}/users/${message.userId}`);
-					await addMessage(result.data, message.content);
+		socket.emit('get_messages', async (messages: any[]) => {
+			if (messagesDiv.innerHTML === '') {
+				for (let message of messages) {
+					await addMessage(message.username, message.content);
 				}
+
+				messagesDiv.scrollTo(0, messagesDiv.scrollHeight);
 			}
+		});
+
+		socket.on('message', async (message: any) => {
+			await addMessage(message.username, message.content);
+			messagesDiv.scrollTo(0, messagesDiv.scrollHeight);
 		});
 	});
 
@@ -90,12 +89,12 @@
 		return res;
 	}
 
-	async function addMessage(user: API.User, content: string, isDM?: boolean) {
+	async function addMessage(username: string, content: string, isDM?: boolean) {
 		if (messagesDiv && messageInput) {
 			let msgEl = document.createElement('p');
 			content = await replaceMentions(content);
 
-			let line = `<b>${isDM ? '[DM] ' : ''}${user.username}</b>: ${content}`;
+			let line = `<b>${isDM ? '[DM] ' : ''}${username}</b>: ${content}`;
 
 			msgEl.innerHTML = DOMPurify.sanitize(line, {
 				ALLOWED_TAGS: ['b', 'a', 'br', 'p']
@@ -104,7 +103,7 @@
 
 			messagesDiv.scrollTo(0, messagesDiv.scrollHeight);
 
-			if (user.username === $user.username) {
+			if (username === $user.username) {
 				messageInput.value = '';
 			}
 		}
@@ -194,10 +193,8 @@
 
 			.messaging-div {
 				display: flex;
-				position: absolute;
-				bottom: 30px;
-				right: 20px;
-				margin-bottom: 10px;
+				justify-content: space-around;
+				margin: 5px;
 
 				input {
 					width: 280px;

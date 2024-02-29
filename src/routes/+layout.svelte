@@ -25,6 +25,14 @@
 				});
 			});
 		}
+
+		let searchbar: HTMLInputElement = document.querySelector('.searchbar')!;
+		let searchbtn = document.querySelector('.searchbtn')!;
+
+		searchbtn.addEventListener('click', (ev) => {
+			window.location.href = `/search?q=${encodeURIComponent(searchbar.value)}`;
+		});
+
 		function getCookie(cname: string) {
 			let name = cname + '=';
 			let decodedCookie = decodeURIComponent(document.cookie);
@@ -41,18 +49,34 @@
 			return '';
 		}
 
-		let searchbar: HTMLInputElement = document.querySelector('.searchbar')!;
-		let searchbtn = document.querySelector('.searchbtn')!;
+		function generateSession() {
+			let chars = 'abcdefghijklmnopqrstuvwxyz1234567890';
+			let res = '';
 
-		searchbtn.addEventListener('click', (ev) => {
-			window.location.href = `/search?q=${encodeURIComponent(searchbar.value)}`;
-		});
+			for (let i = 0; i < 10; i++) {
+				res += chars[Math.floor(Math.random() * chars.length)];
+			}
 
-		if (!getCookie('token')) return;
+			return res;
+		}
 
-		socket.emit('login', getCookie('token'), (u: API.ClientUser) => {
-			user.set(u);
-		});
+		localStorage.setItem('session', generateSession());
+
+		(async () => {
+			if (getCookie('token')) {
+				if (!socket.connected) {
+					socket.connect();
+					socket.emit(
+						'session',
+						localStorage.getItem('session'),
+						getCookie('token'),
+						(u: API.ClientUser) => {
+							if (u) user.set(u);
+						}
+					);
+				}
+			}
+		})();
 	});
 </script>
 
@@ -81,7 +105,7 @@
 <slot />
 
 {#if $user}
-	<Chatbox {socket}></Chatbox>
+	<Chatbox />
 {/if}
 
 <style lang="scss">
@@ -107,7 +131,7 @@
 	:global(input) {
 		border: 1px solid gray;
 		border-radius: 10px;
-		height: 25px;
+		height: 26px;
 		width: 400px;
 		text-indent: 10px;
 		margin-inline: 5px;

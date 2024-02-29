@@ -114,12 +114,24 @@ route.post('/', websiteRequest, async (req, res) => {
 	let token = randomToken();
 	let hashedPassword = hashSync(password, 10);
 
+	let defaultIcons = [
+		'/default-icons/default-icon-klee.jpg',
+		'/default-icons/default-icon-luffy.jpg',
+		'/default-icons/default-icon-makoto.jpg',
+		'/default-icons/default-icon-masaru.jpg',
+		'/default-icons/default-icon-slayer.jpg',
+		'/default-icons/default-icon-venti.jpg'
+	];
+
+	let randomAvatar = defaultIcons[Math.floor(Math.random() * defaultIcons.length)];
+
 	let result = await collection.insertOne({
 		username,
 		email,
 		token,
 		password: hashedPassword,
 		createdAt: Date.now(),
+		avatar: randomAvatar,
 		ip: req.headers['x-forwarded-for']
 	});
 

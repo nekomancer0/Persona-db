@@ -29,6 +29,10 @@
 		if (!updateForm) return;
 		let btnsubmit: HTMLButtonElement = updateForm.querySelector('#submit')!;
 
+		updateForm.addEventListener('submit', (ev) => {
+			ev.preventDefault();
+		});
+
 		btnsubmit.addEventListener('click', async (ev) => {
 			let formdata = new FormData(updateForm);
 
@@ -122,7 +126,16 @@
 				<div class="characters">
 					{#await getMyCharacters() then charas}
 						{#each charas as chara}
-							<a href={`/${chara.code}`}>{chara.name}</a>
+							<div class="box">
+								<div class="inline">
+									<div class="block">
+										<h3 class="name">{chara.name}</h3>
+										<a href={`/${chara.code}`} id="go">Page</a>
+									</div>
+									<img src={chara.icon} alt="" class="icon" />
+								</div>
+								<a href={`/${chara.code}`}>{chara.name}</a>
+							</div>
 						{/each}
 					{/await}
 				</div>
@@ -140,8 +153,6 @@
 	@use '../../variables.scss';
 
 	form {
-		-webkit-box-shadow: inset 1px 1px 13px -3px #000000;
-		box-shadow: inset 1px 1px 13px -3px #000000;
 		border-radius: 15px;
 		padding: 10px;
 		width: 50%;
@@ -156,6 +167,29 @@
 	.my-characters-box {
 		margin-block: 20px;
 		text-align: center;
+
+		.characters {
+			display: flex;
+			gap: 10px;
+			justify-content: center;
+			.box {
+				width: 300px;
+				height: 20%;
+				padding: 20px;
+
+				.inline {
+					display: flex;
+					justify-content: space-around;
+					align-items: center;
+
+					.icon {
+						height: 150px;
+						height: 150px;
+						border-radius: 50%;
+					}
+				}
+			}
+		}
 	}
 
 	.alert {

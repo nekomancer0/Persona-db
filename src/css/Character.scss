@@ -17,6 +17,12 @@
 	margin-bottom: 10px;
 }
 
+.setting-refsheet {
+	button {
+		width: 120px;
+	}
+}
+
 .inline {
 	display: flex;
 	justify-content: space-around;
@@ -82,6 +88,7 @@
 	width: 80%;
 	border-bottom: 1px solid variables.$raisin-black;
 	margin-inline: auto;
+	padding-bottom: 5px;
 	margin-bottom: 10px;
 
 	input[type='text'] {

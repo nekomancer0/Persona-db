@@ -7,24 +7,24 @@ function __memo(fn) {
 return {
 	appDir: "_app",
 	appPath: "_app",
-	assets: new Set(["favicon.png","logo.jpg","sitemap.txt","welcome1.png","welcome2.gif"]),
-	mimeTypes: {".png":"image/png",".jpg":"image/jpeg",".txt":"text/plain",".gif":"image/gif"},
+	assets: new Set(["default-icons/default-icon-klee.jpg","default-icons/default-icon-luffy.jpg","default-icons/default-icon-makoto.jpg","default-icons/default-icon-masaru.jpg","default-icons/default-icon-slayer.jpg","default-icons/default-icon-venti.jpg","favicon.png","logo.jpg","sitemap.txt","welcome1.png","welcome2.gif"]),
+	mimeTypes: {".jpg":"image/jpeg",".png":"image/png",".txt":"text/plain",".gif":"image/gif"},
 	_: {
-		client: {"start":"_app/immutable/entry/start.BP-XGciX.js","app":"_app/immutable/entry/app.E-vUWJuS.js","imports":["_app/immutable/entry/start.BP-XGciX.js","_app/immutable/chunks/entry.Cbhw0m9C.js","_app/immutable/chunks/scheduler.BWOwpdHh.js","_app/immutable/entry/app.E-vUWJuS.js","_app/immutable/chunks/scheduler.BWOwpdHh.js","_app/immutable/chunks/index.MrXRJrN0.js"],"stylesheets":[],"fonts":[],"uses_env_dynamic_public":false},
+		client: {"start":"_app/immutable/entry/start.B4r9bC-n.js","app":"_app/immutable/entry/app.MngorCTN.js","imports":["_app/immutable/entry/start.B4r9bC-n.js","_app/immutable/chunks/entry.CvtO8IbG.js","_app/immutable/chunks/scheduler.BWOwpdHh.js","_app/immutable/entry/app.MngorCTN.js","_app/immutable/chunks/scheduler.BWOwpdHh.js","_app/immutable/chunks/index.MrXRJrN0.js"],"stylesheets":[],"fonts":[],"uses_env_dynamic_public":false},
 		nodes: [
-			__memo(() => import('./chunks/0--4VxhtOP.js')),
-			__memo(() => import('./chunks/1-B1F19pk6.js')),
-			__memo(() => import('./chunks/2-YyWdl7MV.js')),
-			__memo(() => import('./chunks/3-BB-JKAK-.js')),
-			__memo(() => import('./chunks/4-KR-GRRFM.js')),
+			__memo(() => import('./chunks/0-r0rmBvYH.js')),
+			__memo(() => import('./chunks/1-Cce7lyg3.js')),
+			__memo(() => import('./chunks/2-N8kktGDM.js')),
+			__memo(() => import('./chunks/3-DKrCyuBc.js')),
+			__memo(() => import('./chunks/4-BjP-BMtG.js')),
 			__memo(() => import('./chunks/5-B0wenqdo.js')),
-			__memo(() => import('./chunks/6-BJTWsby-.js')),
-			__memo(() => import('./chunks/7-Car1dmoo.js')),
-			__memo(() => import('./chunks/8-DaQ1og_-.js')),
-			__memo(() => import('./chunks/9-IE74Szgp.js')),
-			__memo(() => import('./chunks/10-DIkii8Bv.js')),
-			__memo(() => import('./chunks/11-MPgvpGjC.js')),
-			__memo(() => import('./chunks/12-CE2NB79J.js'))
+			__memo(() => import('./chunks/6-Bdmn9SGe.js')),
+			__memo(() => import('./chunks/7-DMb_Iq4c.js')),
+			__memo(() => import('./chunks/8-Cq_d7YEX.js')),
+			__memo(() => import('./chunks/9-C662R74n.js')),
+			__memo(() => import('./chunks/10-B7Fvhp6p.js')),
+			__memo(() => import('./chunks/11-2fQbuZKf.js')),
+			__memo(() => import('./chunks/12-BFDT1IZN.js'))
 		],
 		routes: [
 			{

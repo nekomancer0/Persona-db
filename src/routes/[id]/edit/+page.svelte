@@ -112,7 +112,6 @@
 
 			<div class="box">
 				<div class="inline-name">
-					<h1>Character :</h1>
 					<input
 						type="text"
 						name="name"

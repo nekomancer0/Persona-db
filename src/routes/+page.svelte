@@ -1,9 +1,10 @@
 <script lang="ts">
 	import axios from 'axios';
 	import RecentCharacters from '../components/RecentCharacters.svelte';
-	import { root } from '../stores';
+	import { root, socket } from '../stores';
 	import dayjs from 'dayjs';
 	import PartialUser from '../components/PartialUser.svelte';
+	let guest_count = 0;
 
 	async function getChangelogs(): Promise<any[]> {
 		try {
@@ -19,6 +20,10 @@
 		let result = await axios.get(`${root}/users/${userId}`);
 		return result.data;
 	}
+
+	socket.on('guest_count', (count: number) => {
+		guest_count = count;
+	});
 </script>
 
 <svelte:head>
@@ -33,6 +38,7 @@
 </svelte:head>
 
 <main>
+	<p id="guest_count">There are {guest_count} guests.</p>
 	<div class="container full">
 		<div class="center">
 			<img src="/welcome1.png" alt="" />
@@ -65,6 +71,9 @@
 	@use '../variables.scss';
 	@import url('https://fonts.googleapis.com/css2?family=Protest+Revolution&display=swap');
 
+	#guest_count {
+		float: right;
+	}
 	.changelogs {
 		margin-inline: 10%;
 		display: flex;

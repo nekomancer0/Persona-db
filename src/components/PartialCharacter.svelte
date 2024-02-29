@@ -25,12 +25,13 @@
 		gap: 10px;
 
 		.author {
+			margin-inline: auto;
 			:global(p) {
-				color: variables.$orchid-pink;
+				color: whits;
 			}
 		}
 		a {
-			color: variables.$orchid-pink;
+			color: white;
 		}
 	}
 </style>

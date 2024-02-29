@@ -23,62 +23,94 @@ import { ObjectId } from "mongodb";
 var users = db.collection("users");
 var messages = db.collection("messages");
 function IOHandler(io2) {
+  let sessions = [];
   io2.on("connection", async (socket) => {
-    socket.on("login", async (token, callback) => {
-      let user = await users.findOne({ token });
+    let user = null;
+    socket.on(
+      "session",
+      async (sessionId, token, callback) => {
+        if (sessions.find((s) => s.sessionId === sessionId)) {
+          socket.disconnect(true);
+          socket.removeAllListeners();
+          return;
+        }
+        if (!token)
+          sessions.push({ sessionId, user: null });
+        if (token) {
+          user = await users.findOne({ token });
+          if (!user)
+            return;
+          console.log(`${user.username} (${user._id.toString()}) joined the website`);
+          await users.updateOne({ token }, { $set: { online: true } });
+          socket.on("get_messages", async (callback2) => {
+            let allMessages = await messages.find().toArray();
+            let parsedAllmessages = [];
+            for (let msg of allMessages) {
+              if (msg.targetId) {
+                if (user._id.equals(msg.targetId)) {
+                  parsedAllmessages.push({
+                    username: user.username,
+                    content: msg.content,
+                    targetId: msg.targetId ? msg.targetId : null
+                  });
+                }
+              } else {
+                let u = await users.findOne({ _id: new ObjectId(msg.userId) });
+                if (u) {
+                  parsedAllmessages.push({
+                    username: u.username,
+                    content: msg.content,
+                    targetId: msg.targetId ? msg.targetId : null
+                  });
+                }
+              }
+            }
+            await callback2(parsedAllmessages);
+          });
+          socket.on("message", async (content, target) => {
+            if (!content)
+              return;
+            await messages.insertOne({
+              createdAt: Date.now(),
+              userId: user._id,
+              content,
+              targetId: target ? target._id : null
+            });
+            for (let [id, socket2] of io2.sockets.sockets) {
+              socket2.emit("message", {
+                username: user.username,
+                content,
+                targetId: target ? target._id : null
+              });
+            }
+          });
+          if (user.admin) {
+            socket.on("dashbord", () => {
+              socket.on("get_users", async (callback2) => {
+                callback2(await users.find().toArray());
+              });
+              socket.on("delete_user", async (userId, message) => {
+                let u = await users.findOne({ _id: new ObjectId(userId) });
+                if (u?.admin) {
+                  message("Can't delete an admin user");
+                } else
+                  await users.deleteOne({ _id: u?._id });
+              });
+            });
+          }
+          callback(user);
+        }
+      }
+    );
+    io2.sockets.emit("guest_count", io2.sockets.sockets.size);
+    socket.on("disconnect", async () => {
       if (!user)
         return;
-      await users.updateOne({ token }, { $set: { online: true } });
-      await callback(user);
-      console.log(`${user.username} (${user._id.toString()}) joined the website`);
-      socket.emit("retrieve_messages", await doRetrieveMessages());
-      async function doRetrieveMessages() {
-        let allMessages = await messages.find().toArray();
-        let parsedAllmessages = [];
-        for (let msg of allMessages) {
-          if (msg.targetId) {
-            if (user._id.equals(msg.targetId)) {
-              parsedAllmessages.push(msg);
-            }
-          } else
-            parsedAllmessages.push(msg);
-        }
-        return parsedAllmessages;
-      }
-      socket.on("message", async (content, target) => {
-        if (!content)
-          return;
-        await messages.insertOne({
-          createdAt: Date.now(),
-          userId: user._id,
-          content,
-          targetId: target ? target._id : null
-        });
-        for (let [id, socket2] of io2.sockets.sockets) {
-          socket2.emit("retrieve_messages", await doRetrieveMessages());
-        }
-      });
-      socket.on("get_messages", async (callback2) => {
-        await callback2(await doRetrieveMessages());
-      });
-      socket.on("disconnect", async () => {
-        console.log(`${user.username} (${user._id.toString()}) left the website`);
-        await users.updateOne({ token: user.token }, { $set: { online: false } });
-      });
-      if (user.admin) {
-        socket.on("dashbord", () => {
-          socket.on("get_users", async (callback2) => {
-            callback2(await users.find().toArray());
-          });
-          socket.on("delete_user", async (userId, message) => {
-            let u = await users.findOne({ _id: new ObjectId(userId) });
-            if (u?.admin) {
-              message("Can't delete an admin user");
-            } else
-              await users.deleteOne({ _id: u?._id });
-          });
-        });
-      }
+      await users.updateOne({ token: user.token }, { $set: { online: false } });
+      console.log(`${user.username} (${user._id.toString()}) left the website`);
+    });
+    socket.on("disconnect", () => {
+      io2.emit("guest_count", io2.sockets.sockets.size);
     });
   });
 }
@@ -219,12 +251,22 @@ route.post("/", websiteRequest_default, async (req, res) => {
   }
   let token = randomToken();
   let hashedPassword = hashSync(password, 10);
+  let defaultIcons = [
+    "/default-icons/default-icon-klee.jpg",
+    "/default-icons/default-icon-luffy.jpg",
+    "/default-icons/default-icon-makoto.jpg",
+    "/default-icons/default-icon-masaru.jpg",
+    "/default-icons/default-icon-slayer.jpg",
+    "/default-icons/default-icon-venti.jpg"
+  ];
+  let randomAvatar = defaultIcons[Math.floor(Math.random() * defaultIcons.length)];
   let result = await collection2.insertOne({
     username,
     email,
     token,
     password: hashedPassword,
     createdAt: Date.now(),
+    avatar: randomAvatar,
     ip: req.headers["x-forwarded-for"]
   });
   res.cookie("token", token);
@@ -545,26 +587,33 @@ function APIHandler(app2, server2) {
       next();
   });
   route5.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", req.headers.origin || req.headers["host"]);
+    res.header("Access-Control-Allow-Origin", req.headers.origin || req.headers.host);
     res.header("Access-Control-Allow-Credentials", "true");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    res.header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS");
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization, Content-Length"
+    );
+    res.header("Access-Control-Allow-Methods", "GET, HEAD, PUT, PATCH, POST, DELETE, OPTIONS");
     next();
+  });
+  route5.use((req, res, next) => {
+    let domain = req.headers.origin ? new URL(req.headers.origin).hostname : req.headers.host;
+    let local = domain === "localhost";
+    cookieSession({
+      secret: randomUUID(),
+      httpOnly: false,
+      secure: local ? false : true,
+      // sameSite: 'strict',
+      sameSite: local ? "lax" : "strict",
+      path: "/",
+      domain,
+      maxAge: Date.now() + 2592e6
+    })(req, res, next);
   });
   route5.use("/files", e.static(path.join(__dirname, "files")));
   route5.use(e.json());
   route5.use(e.urlencoded());
   route5.use(cookieParser());
-  route5.use(
-    cookieSession({
-      secret: randomUUID(),
-      httpOnly: false,
-      sameSite: "strict",
-      path: "/",
-      domain: "persona-db.xyz",
-      maxAge: Date.now() + 2592e6
-    })
-  );
   route5.use(logger_default);
   route5.get("/", (req, res) => {
     res.send("Hello World");

@@ -40,7 +40,7 @@
 				});
 
 				if (typeof result === 'string') {
-					await goto(`/profile/@${usernameInput.value}`);
+					await goto(`/profile`);
 				} else {
 					writeError(result.message);
 				}
@@ -70,7 +70,7 @@
 				});
 
 				if (typeof result === 'string') {
-					await goto(`/profile/@${usernameInput.value}`);
+					await goto(`/profile`);
 				} else {
 					writeError(result.message);
 				}

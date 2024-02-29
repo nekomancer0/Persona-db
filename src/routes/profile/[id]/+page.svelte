@@ -4,6 +4,7 @@
 	import { root } from '../../../stores';
 	import type { API } from '../../../api';
 	import api from '../../../api';
+	import PartialCharacter from '../../../components/PartialCharacter.svelte';
 
 	export let data;
 
@@ -52,7 +53,16 @@
 				<div class="characters">
 					{#await getMyCharacters() then charas}
 						{#each charas as chara}
-							<a href={`/${chara.code}`}>{chara.name}</a>
+							<div class="box">
+								<div class="inline">
+									<div class="block">
+										<h3 class="name">{chara.name}</h3>
+										<a href={`/${chara.code}`} id="go">Page</a>
+									</div>
+									<img src={chara.icon} alt="" class="icon" />
+								</div>
+								<a href={`/${chara.code}`}>{chara.name}</a>
+							</div>
 						{/each}
 					{/await}
 				</div>
@@ -67,5 +77,28 @@
 	.my-characters-box {
 		margin-block: 20px;
 		text-align: center;
+
+		.characters {
+			display: flex;
+			gap: 10px;
+			justify-content: center;
+			.box {
+				width: 300px;
+				height: 20%;
+				padding: 20px;
+
+				.inline {
+					display: flex;
+					justify-content: space-around;
+					align-items: center;
+
+					.icon {
+						height: 150px;
+						height: 150px;
+						border-radius: 50%;
+					}
+				}
+			}
+		}
 	}
 </style>
